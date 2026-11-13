@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的任务</title>
+<style>
+  .wrap, .wrap * { box-sizing: border-box; }
+
+  .wrap {
+    position: relative;
+    max-width: 1220px;
+    margin: 0 auto;
+    padding: 26px 18px 70px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #5b5148;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #6b5d4f;
+    margin: 0 0 4px;
+    padding: 0;
+  }
+
+  .wrap .sub {
+    margin: 0 0 18px;
+    font-size: 13px;
+    color: #ab9e91;
+  }
+
+  .wrap .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #fffcf6;
+    border: 1px solid #f1e7d9;
+    border-radius: 18px;
+    box-shadow: 0 4px 14px rgba(190, 170, 150, .09);
+  }
+
+  .wrap input[type="search"],
+  .wrap input[type="text"],
+  .wrap input[type="date"],
+  .wrap select,
+  .wrap textarea {
+    font-family: inherit;
+    font-size: 14px;
+    color: #5b5148;
+    background: #fffdf9;
+    border: 1px solid #ece0d2;
+    border-radius: 12px;
+    padding: 10px 12px;
+    outline: none;
+    width: 100%;
+    margin: 0;
+    transition: border-color .15s, box-shadow .15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .wrap select {
+    background-image: linear-gradient(45deg, transparent 50%, #b4a596 50%), linear-gradient(135deg, #b4a596 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 30px;
+  }
+
+  .wrap input::placeholder,
+  .wrap textarea::placeholder { color: #c0b4a7; }
+
+  .wrap input:focus,
+  .wrap select:focus,
+  .wrap textarea:focus {
+    border-color: #ecc3ce;
+    box-shadow: 0 0 0 3px rgba(236, 195, 206, .28);
+  }
+
+  .wrap textarea { resize: vertical; min-height: 72px; }
+
+  .wrap .toolbar .search {
+    flex: 1 1 240px;
+    min-width: 0;
+    height: 42px;
+  }
+
+  .wrap .toolbar select {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 132px;
+    height: 42px;
+    cursor: pointer;
+  }
+
+  .wrap .btn {
+    font-family: inherit;
+    font-size: 14px;
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 12px;
+    border: 1px solid #f0c0ca;
+    background: #f9d7dd;
+    color: #8a4a5a;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background .15s, transform .12s;
+    white-space: nowrap;
+    margin: 0;
+  }
+
+  .wrap .btn:hover { background: #f6cbd3; }
+  .wrap .btn:active { transform: translateY(1px); }
+
+  .wrap .btn-ghost {
+    background: #f7f2ea;
+    border-color: #ece1d3;
+    color: #7a6d60;
+  }
+
+  .wrap .btn-ghost:hover { background: #f1e9de; }
+
+  .wrap .btn-danger {
+    background: #f9dcdc;
+    border-color: #eec6c6;
+    color: #9e4f58;
+  }
+
+  .wrap .btn-danger:hover { background: #f4cece; }
+
+  .wrap .mobile-tabs { display: none; }
+
+  .wrap .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+    align-items: start;
+  }
+
+  .wrap .column {
+    border-radius: 20px;
+    border: 1px solid;
+    padding: 12px 12px 14px;
+    min-height: 140px;
+  }
+
+  .wrap .column[data-status="todo"]  { background: #fdf3f5; border-color: #f7e2e6; }
+  .wrap .column[data-status="doing"] { background: #f2f9f4; border-color: #ddefe3; }
+  .wrap .column[data-status="done"]  { background: #f7f4fc; border-color: #e8e1f6; }
+
+  .wrap .col-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 4px 12px;
+  }
+
+  .wrap .col-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    color: #6b5d4f;
+  }
+
+  .wrap .dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+
+  .wrap .column[data-status="todo"]  .dot { background: #f0b3c1; }
+  .wrap .column[data-status="doing"] .dot { background: #a5d7b7; }
+  .wrap .column[data-status="done"]  .dot { background: #c2b6e4; }
+
+  .wrap .count {
+    background: #fffdf9;
+    border: 1px solid #ece0d2;
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #8c7f72;
+  }
+
+  .wrap .list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .wrap .empty {
+    text-align: center;
+    font-size: 13px;
+    color: #b9ab9d;
+    padding: 26px 10px;
+    border: 1px dashed #e8dbcb;
+    border-radius: 14px;
+    background: rgba(255, 253, 249, .6);
+  }
+
+  .wrap .card {
+    background: #fffdf9;
+    border: 1px solid #f0e6d8;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 2px 6px rgba(180, 160, 140, .08);
+  }
+
+  .wrap .card.overdue {
+    background: #fdf4f4;
+    border-color: #f0cccc;
+    box-shadow: 0 2px 8px rgba(200, 140, 140, .12);
+  }
+
+  .wrap .card.soon {
+    background: #fdfaef;
+    border-color: #f0e0b6;
+    box-shadow: 0 2px 8px rgba(200, 175, 120, .12);
+  }
+
+  .wrap .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+  }
+
+  .wrap .card-check {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 3px 0 0;
+    accent-color: #9fd3b3;
+    cursor: pointer;
+  }
+
+  .wrap .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #544a41;
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .wrap .card.done .card-title {
+    color: #a89c90;
+    font-weight: 500;
+    text-decoration: line-through;
+  }
+
+  .wrap .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 9px;
+  }
+
+  .wrap .tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    line-height: 1.3;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .wrap .pri-high { background: #fbe0e4; color: #a3485c; border-color: #f4ccd3; }
+  .wrap .pri-mid  { background: #fdf0d3; color: #93712a; border-color: #f4e3bd; }
+  .wrap .pri-low  { background: #ddf1e5; color: #3f7d5b; border-color: #c9e7d6; }
+
+  .wrap .tag-cat  { background: #e8f0fb; color: #4c6a94; border-color: #d7e4f7; }
+
+  .wrap .warn-over { background: #fbe6e6; color: #a4585f; border-color: #f2cdcd; }
+  .wrap .warn-soon { background: #fdf3d9; color: #9a7a2e; border-color: #f3e2b4; }
+
+  .wrap .due {
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: #a3968a;
+  }
+
+  .wrap .note {
+    margin-top: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #8c7f72;
+    background: #faf6f0;
+    border-radius: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .wrap .card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .wrap .card-actions select {
+    width: auto;
+    flex: 0 0 auto;
+    font-size: 12.5px;
+    padding: 6px 26px 6px 8px;
+    border-radius: 10px;
+    background-color: #faf6f0;
+    cursor: pointer;
+  }
+
+  .wrap .card-actions button {
+    font-family: inherit;
+    font-size: 12.5px;
+    padding: 6px 11px;
+    border-radius: 10px;
+    background: #f7f2ea;
+    border: 1px solid #ece1d3;
+    color: #7a6d60;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    margin: 0;
+  }
+
+  .wrap .card-actions button:hover { background: #f1e9de; }
+
+  .wrap .card-actions button.danger:hover {
+    background: #fbe4e4;
+    border-color: #f0c9c9;
+    color: #a3565f;
+  }
+
+  /* ---------- 弹窗默认样式（会被 JS 内联样式强制覆盖） ---------- */
+  .mtb-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 2147483600;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(96, 80, 66, .45);
+    padding: 24px 16px 48px;
+    box-sizing: border-box;
+  }
+
+  .mtb-modal {
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 22px;
+    background: #fffcf6;
+    border: 1px solid #f2e7d8;
+    border-radius: 22px;
+    box-shadow: 0 20px 50px rgba(150, 130, 110, .35);
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #5b5148;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  .mtb-modal h2 {
+    margin: 0 0 16px;
+    font-size: 19px;
+    color: #5f5347;
+    font-weight: 700;
+    padding: 0;
+  }
+
+  .mtb-modal label {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #8a7c6e;
+  }
+
+  .mtb-modal label > span { display: block; margin-bottom: 6px; }
+
+  .mtb-modal input[type="text"],
+  .mtb-modal input[type="date"],
+  .mtb-modal select,
+  .mtb-modal textarea {
+    font-family: inherit;
+    font-size: 14px;
+    color: #5b5148;
+    background-color: #fffdf9;
+    border: 1px solid #ece0d2;
+    border-radius: 12px;
+    padding: 10px 12px;
+    outline: none;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .mtb-modal select {
+    background-image: linear-gradient(45deg, transparent 50%, #b4a596 50%), linear-gradient(135deg, #b4a596 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 30px;
+  }
+
+  .mtb-modal textarea { resize: vertical; min-height: 72px; }
+
+  .mtb-modal input::placeholder,
+  .mtb-modal textarea::placeholder { color: #c0b4a7; }
+
+  .mtb-form-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .mtb-form-row > label { flex: 1 1 0; min-width: 0; }
+
+  .mtb-error {
+    min-height: 18px;
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #b3596a;
+  }
+
+  .mtb-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .mtb-btn {
+    font-family: inherit;
+    font-size: 14px;
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 12px;
+    border: 1px solid #f0c0ca;
+    background: #f9d7dd;
+    color: #8a4a5a;
+    cursor: pointer;
+    transition: background .15s;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .mtb-btn-ghost {
+    background: #f7f2ea;
+    border-color: #ece1d3;
+    color: #7a6d60;
+  }
+
+  .mtb-btn-danger {
+    background: #f9dcdc;
+    border-color: #eec6c6;
+    color: #9e4f58;
+  }
+
+  .mtb-confirm-text {
+    margin: 0 0 18px;
+    font-size: 14px;
+    color: #7a6d60;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  @media (max-width: 768px) {
+    .wrap { padding: 16px 12px 60px; }
+    .wrap h1 { font-size: 22px; }
+    .wrap .sub { margin-bottom: 12px; }
+
+    .wrap .toolbar {
+      flex-direction: row;
+      flex-wrap: wrap;
+      padding: 10px;
+      gap: 8px;
+    }
+
+    .wrap .toolbar .search {
+      flex: 1 1 100%;
+      width: 100%;
+      height: 44px;
+    }
+
+    .wrap .toolbar select {
+      flex: 1 1 calc(50% - 4px);
+      width: auto;
+      min-width: 0;
+      height: 44px;
+    }
+
+    .wrap .toolbar .btn {
+      flex: 1 1 100%;
+      width: 100%;
+      height: 44px;
+    }
+
+    .wrap .mobile-tabs {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 6px;
+      background: #fffcf6;
+      border: 1px solid #f1e7d9;
+      border-radius: 16px;
+      box-shadow: 0 4px 14px rgba(190, 170, 150, .09);
+    }
+
+    .wrap .mobile-tabs button {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 11px 4px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #9b8d7f;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+      margin: 0;
+    }
+
+    .wrap .mobile-tabs button .mtab-count {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: #f7f2ea;
+      color: #9b8d7f;
+    }
+
+    .wrap .mobile-tabs button.active[data-status="todo"] {
+      background: #fbe4e8;
+      border-color: #f4d0d6;
+      color: #8a4a5a;
+    }
+    .wrap .mobile-tabs button.active[data-status="todo"] .mtab-count {
+      background: #f7d3da;
+      color: #8a4a5a;
+    }
+
+    .wrap .mobile-tabs button.active[data-status="doing"] {
+      background: #dff2e6;
+      border-color: #cbe8d6;
+      color: #3f7d5b;
+    }
+    .wrap .mobile-tabs button.active[data-status="doing"] .mtab-count {
+      background: #cbe8d6;
+      color: #3f7d5b;
+    }
+
+    .wrap .mobile-tabs button.active[data-status="done"] {
+      background: #ebe4fa;
+      border-color: #ddd2f2;
+      color: #6a55a0;
+    }
+    .wrap .mobile-tabs button.active[data-status="done"] .mtab-count {
+      background: #ddd2f2;
+      color: #6a55a0;
+    }
+
+    .wrap .board {
+      grid-template-columns: 1fr;
+      gap: 0;
+      margin-top: 10px;
+    }
+
+    .wrap .column { min-height: 160px; }
+
+    .wrap .card-actions select,
+    .wrap .card-actions button {
+      font-size: 13px;
+      padding: 9px 12px;
+      border-radius: 11px;
+    }
+
+    .wrap .card-actions select { padding-right: 28px; flex: 1 1 auto; }
+
+    .mtb-overlay { padding: 12px 10px 40px; }
+    .mtb-modal { padding: 18px; border-radius: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="taskApp">
+  <h1>我的任务</h1>
+  <p class="sub">记录每一件需要完成的小事</p>
+
+  <div class="toolbar">
+    <input id="searchInput" class="search" type="search" placeholder="搜索任务名称、备注、分类…" autocomplete="off">
+    <select id="categoryFilter" aria-label="分类筛选"></select>
+    <select id="statusFilter" aria-label="状态筛选">
+      <option value="all">全部状态</option>
+      <option value="todo">待办</option>
+      <option value="doing">进行中</option>
+      <option value="done">完成</option>
+    </select>
+    <button id="addBtn" class="btn" type="button">+ 新增任务</button>
+  </div>
+
+  <div class="mobile-tabs" id="mobileTabs" role="tablist" aria-label="看板列切换">
+    <button type="button" data-status="todo">待办 <span class="mtab-count" id="mtab-todo">0</span></button>
+    <button type="button" data-status="doing">进行中 <span class="mtab-count" id="mtab-doing">0</span></button>
+    <button type="button" data-status="done">完成 <span class="mtab-count" id="mtab-done">0</span></button>
+  </div>
+
+  <div class="board" id="board">
+    <section class="column" data-status="todo">
+      <div class="col-head">
+        <div class="col-title"><span class="dot"></span>待办</div>
+        <span class="count" id="count-todo">0</span>
+      </div>
+      <div class="list" id="list-todo"></div>
+    </section>
+
+    <section class="column" data-status="doing">
+      <div class="col-head">
+        <div class="col-title"><span class="dot"></span>进行中</div>
+        <span class="count" id="count-doing">0</span>
+      </div>
+      <div class="list" id="list-doing"></div>
+    </section>
+
+    <section class="column" data-status="done">
+      <div class="col-head">
+        <div class="col-title"><span class="dot"></span>完成</div>
+        <span class="count" id="count-done">0</span>
+      </div>
+      <div class="list" id="list-done"></div>
+    </section>
+  </div>
+</div>
+
+<div class="mtb-overlay" id="overlay" aria-hidden="true">
+  <div class="mtb-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">新增任务</h2>
+
+    <label>
+      <span>任务名称 *</span>
+      <input id="fTitle" type="text" maxlength="100" placeholder="请输入任务名称" autocomplete="off">
+    </label>
+
+    <div class="mtb-form-row">
+      <label>
+        <span>截止日期</span>
+        <input id="fDue" type="date">
+      </label>
+      <label>
+        <span>优先级</span>
+        <select id="fPriority">
+          <option value="高">高</option>
+          <option value="中" selected>中</option>
+          <option value="低">低</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="mtb-form-row">
+      <label>
+        <span>分类</span>
+        <input id="fCategory" type="text" list="catSuggest" maxlength="20" placeholder="如：工作" autocomplete="off">
+        <datalist id="catSuggest">
+          <option value="工作"></option>
+          <option value="学习"></option>
+          <option value="生活"></option>
+          <option value="其他"></option>
+        </datalist>
+      </label>
+      <label>
+        <span>状态</span>
+        <select id="fStatus">
+          <option value="todo">待办</option>
+          <option value="doing">进行中</option>
+          <option value="done">完成</option>
+        </select>
+      </label>
+    </div>
+
+    <label>
+      <span>备注</span>
+      <textarea id="fNote" rows="3" maxlength="500" placeholder="可留空"></textarea>
+    </label>
+
+    <p class="mtb-error" id="formError"></p>
+
+    <div class="mtb-actions">
+      <button type="button" class="mtb-btn mtb-btn-ghost" id="cancelBtn">取消</button>
+      <button type="button" class="mtb-btn" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="mtb-overlay" id="confirmOverlay" aria-hidden="true">
+  <div class="mtb-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle">确认删除</h2>
+    <p class="mtb-confirm-text" id="confirmText"></p>
+    <div class="mtb-actions">
+      <button type="button" class="mtb-btn mtb-btn-ghost" id="confirmCancel">取消</button>
+      <button type="button" class="mtb-btn mtb-btn-danger" id="confirmOk">删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'my-task-board-tasks';
+  var STATUSES = ['todo', 'doing', 'done'];
+  var STATUS_LABEL = { todo: '待办', doing: '进行中', done: '完成' };
+  var PRI_CLASS = { '高': 'high', '中': 'mid', '低': 'low' };
+  var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif';
+
+  var tasks = loadTasks();
+  var editingId = null;
+  var lastCreatedAt = 0;
+  var mobileStatus = 'todo';
+  var pendingDeleteId = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  var app = $('taskApp');
+  if (!app) return;
+
+  var board = $('board');
+  var searchInput = $('searchInput');
+  var categoryFilter = $('categoryFilter');
+  var statusFilter = $('statusFilter');
+  var addBtn = $('addBtn');
+  var mobileTabs = $('mobileTabs');
+
+  var overlay = $('overlay');
+  var modalTitle = $('modalTitle');
+  var formError = $('formError');
+  var fTitle = $('fTitle');
+  var fDue = $('fDue');
+  var fPriority = $('fPriority');
+  var fCategory = $('fCategory');
+  var fNote = $('fNote');
+  var fStatus = $('fStatus');
+  var cancelBtn = $('cancelBtn');
+  var saveBtn = $('saveBtn');
+  var catSuggest = $('catSuggest');
+
+  var confirmOverlay = $('confirmOverlay');
+  var confirmText = $('confirmText');
+  var confirmCancel = $('confirmCancel');
+  var confirmOk = $('confirmOk');
+
+  var mq = window.matchMedia ? window.matchMedia('(max-width: 768px)') : null;
+
+  /* ---------- 工具函数 ---------- */
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function nextCreatedAt() {
+    var now = Date.now();
+    lastCreatedAt = Math.max(now, lastCreatedAt + 1);
+    return lastCreatedAt;
+  }
+
+  function isMobile() {
+    return !!(mq && mq.matches);
+  }
+
+  function dayDiff(dateStr) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+    if (!m) return null;
+    var due = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    var n = new Date();
+    var today = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+    return Math.round((due - today) / 86400000);
+  }
+
+  function dueFlag(task) {
+    if (task.status === 'done' || !task.dueDate) return '';
+    var d = dayDiff(task.dueDate);
+    if (d === null) return '';
+    if (d < 0) return 'overdue';
+    if (d <= 3) return 'soon';
+    return '';
+  }
+
+  /* ---------- 数据存取 ---------- */
+  function loadTasks() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(function (t) {
+        return t && typeof t === 'object' && t.id;
+      }).map(function (t) {
+        return {
+          id: String(t.id),
+          title: typeof t.title === 'string' ? t.title : '',
+          dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
+          priority: (t.priority === '高' || t.priority === '中' || t.priority === '低') ? t.priority : '中',
+          category: typeof t.category === 'string' ? t.category : '',
+          note: typeof t.note === 'string' ? t.note : '',
+          status: STATUSES.indexOf(t.status) > -1 ? t.status : 'todo',
+          createdAt: typeof t.createdAt === 'number' ? t.createdAt : Date.now()
+        };
+      });
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveTasks() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    } catch (e) {}
+  }
+
+  /* ---------- 排序 ---------- */
+  function sortTasks(a, b) {
+    if (a.dueDate && b.dueDate) {
+      if (a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
+    } else if (a.dueDate) {
+      return -1;
+    } else if (b.dueDate) {
+      return 1;
+    }
+    return b.createdAt - a.createdAt;
+  }
+
+  function getTaskById(id) {
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].id === id) return tasks[i];
+    }
+    return null;
+  }
+
+  /* ---------- 分类选项 ---------- */
+  function renderCategoryOptions() {
+    var current = categoryFilter.value;
+    var cats = [];
+    var seen = {};
+    tasks.forEach(function (t) {
+      var c = (t.category || '').trim();
+      if (c && !seen[c]) { seen[c] = true; cats.push(c); }
+    });
+    cats.sort(function (a, b) { return a.localeCompare(b, 'zh-CN'); });
+
+    var html = '<option value="">全部分类</option>';
+    cats.forEach(function (c) {
+      html += '<option value="' + esc(c) + '">' + esc(c) + '</option>';
+    });
+    categoryFilter.innerHTML = html;
+
+    if (cats.indexOf(current) > -1) categoryFilter.value = current;
+
+    var base = ['工作', '学习', '生活', '其他'];
+    var all = base.slice();
+    cats.forEach(function (c) { if (all.indexOf(c) === -1) all.push(c); });
+    var dl = '';
+    all.forEach(function (c) { dl += '<option value="' + esc(c) + '"></option>'; });
+    catSuggest.innerHTML = dl;
+  }
+
+  /* ---------- 卡片渲染 ---------- */
+  function cardHTML(task) {
+    var flag = dueFlag(task);
+    var cls = 'card';
+    if (flag === 'overdue') cls += ' overdue';
+    if (flag === 'soon') cls += ' soon';
+    if (task.status === 'done') cls += ' done';
+
+    var tags = '<span class="tag pri-' + PRI_CLASS[task.priority] + '">' + esc(task.priority) + '优先级</span>';
+    if (task.category) {
+      tags += '<span class="tag tag-cat">' + esc(task.category) + '</span>';
+    }
+    if (flag === 'overdue') {
+      tags += '<span class="tag warn-over">已逾期</span>';
+    } else if (flag === 'soon') {
+      tags += '<span class="tag warn-soon">临近截止</span>';
+    }
+
+    var dueText = task.dueDate ? '截止日期：' + esc(task.dueDate) : '无截止日期';
+    var noteHTML = task.note ? '<div class="note">' + esc(task.note) + '</div>' : '';
+    var checked = task.status === 'done' ? ' checked' : '';
+
+    var opts = '';
+    STATUSES.forEach(function (s) {
+      opts += '<option value="' + s + '"' + (task.status === s ? ' selected' : '') + '>' + STATUS_LABEL[s] + '</option>';
+    });
+
+    return '' +
+      '<div class="' + cls + '" data-id="' + esc(task.id) + '">' +
+        '<div class="card-top">' +
+          '<input class="card-check" type="checkbox" data-action="toggle" aria-label="标记完成"' + checked + '>' +
+          '<div class="card-title">' + esc(task.title) + '</div>' +
+        '</div>' +
+        '<div class="tags">' + tags + '</div>' +
+        '<div class="due">' + dueText + '</div>' +
+        noteHTML +
+        '<div class="card-actions">' +
+          '<select data-action="status" aria-label="更改状态">' + opts + '</select>' +
+          '<button type="button" data-action="edit">编辑</button>' +
+          '<button type="button" class="danger" data-action="delete">删除</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---------- 移动端标签 / 列显示 ---------- */
+  function updateMobileTabs() {
+    var st = statusFilter.value;
+    var active = (st === 'all') ? mobileStatus : st;
+    var btns = mobileTabs.querySelectorAll('button');
+    Array.prototype.forEach.call(btns, function (b) {
+      var on = b.getAttribute('data-status') === active;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  function applyColumnVisibility() {
+    var st = statusFilter.value;
+    STATUSES.forEach(function (s) {
+      var col = board.querySelector('.column[data-status="' + s + '"]');
+      if (!col) return;
+      var visible;
+      if (isMobile()) {
+        visible = (st === 'all') ? (s === mobileStatus) : (s === st);
+      } else {
+        visible = (st === 'all' || st === s);
+      }
+      col.style.display = visible ? '' : 'none';
+    });
+  }
+
+  /* ---------- 整体渲染 ---------- */
+  function render() {
+    renderCategoryOptions();
+
+    var q = searchInput.value.trim().toLowerCase();
+    var cat = categoryFilter.value;
+
+    STATUSES.forEach(function (s) {
+      var listEl = $('list-' + s);
+      var countEl = $('count-' + s);
+      var mtabCount = $('mtab-' + s);
+
+      var items = tasks.filter(function (t) { return t.status === s; });
+
+      if (q) {
+        items = items.filter(function (t) {
+          var hay = (t.title + ' ' + (t.note || '') + ' ' + (t.category || '')).toLowerCase();
+          return hay.indexOf(q) > -1;
+        });
+      }
+      if (cat) {
+        items = items.filter(function (t) { return (t.category || '').trim() === cat; });
+      }
+
+      items.sort(sortTasks);
+      countEl.textContent = String(items.length);
+      mtabCount.textContent = String(items.length);
+
+      if (items.length === 0) {
+        listEl.innerHTML = '<div class="empty">暂无任务</div>';
+      } else {
+        listEl.innerHTML = items.map(cardHTML).join('');
+      }
+    });
+
+    updateMobileTabs();
+    applyColumnVisibility();
+  }
+
+  /* ---------- 强制内联样式：保证弹窗内容可见 ---------- */
+  function forceOverlayStyle(el) {
+    var s = el.style;
+    s.setProperty('display', 'block', 'important');
+    s.setProperty('position', 'fixed', 'important');
+    s.setProperty('top', '0', 'important');
+    s.setProperty('left', '0', 'important');
+    s.setProperty('right', '0', 'important');
+    s.setProperty('bottom', '0', 'important');
+    s.setProperty('z-index', '2147483600', 'important');
+    s.setProperty('overflow-y', 'auto', 'important');
+    s.setProperty('background', 'rgba(96, 80, 66, .45)', 'important');
+    s.setProperty('padding', '24px 16px 48px', 'important');
+    s.setProperty('box-sizing', 'border-box', 'important');
+    s.setProperty('opacity', '1', 'important');
+    s.setProperty('visibility', 'visible', 'important');
+    s.setProperty('margin', '0', 'important');
+    s.setProperty('transform', 'none', 'important');
+    s.setProperty('filter', 'none', 'important');
+  }
+
+  function forceModalStyle(modal) {
+    if (!modal) return;
+    var ms = modal.style;
+    ms.setProperty('display', 'block', 'important');
+    ms.setProperty('position', 'relative', 'important');
+    ms.setProperty('width', '100%', 'important');
+    ms.setProperty('max-width', '460px', 'important');
+    ms.setProperty('margin', '0 auto', 'important');
+    ms.setProperty('background-color', '#fffcf6', 'important');
+    ms.setProperty('background-image', 'none', 'important');
+    ms.setProperty('color', '#5b5148', 'important');
+    ms.setProperty('border', '1px solid #f2e7d8', 'important');
+    ms.setProperty('border-radius', '22px', 'important');
+    ms.setProperty('padding', '22px', 'important');
+    ms.setProperty('box-shadow', '0 20px 50px rgba(150, 130, 110, .35)', 'important');
+    ms.setProperty('font-family', FONT, 'important');
+    ms.setProperty('font-size', '14px', 'important');
+    ms.setProperty('line-height', '1.5', 'important');
+    ms.setProperty('box-sizing', 'border-box', 'important');
+    ms.setProperty('opacity', '1', 'important');
+    ms.setProperty('visibility', 'visible', 'important');
+    ms.setProperty('text-align', 'left', 'important');
+    ms.setProperty('overflow', 'visible', 'important');
+    ms.setProperty('transform', 'none', 'important');
+    ms.setProperty('filter', 'none', 'important');
+
+    /* 标题 */
+    Array.prototype.forEach.call(modal.querySelectorAll('h2'), function (h) {
+      h.style.setProperty('display', 'block', 'important');
+      h.style.setProperty('color', '#5f5347', 'important');
+      h.style.setProperty('font-size', '19px', 'important');
+      h.style.setProperty('font-weight', '700', 'important');
+      h.style.setProperty('margin', '0 0 16px', 'important');
+      h.style.setProperty('padding', '0', 'important');
+      h.style.setProperty('background', 'none', 'important');
+      h.style.setProperty('opacity', '1', 'important');
+      h.style.setProperty('visibility', 'visible', 'important');
+    });
+
+    /* label */
+    Array.prototype.forEach.call(modal.querySelectorAll('label'), function (lab) {
+      lab.style.setProperty('display', 'block', 'important');
+      lab.style.setProperty('margin-bottom', '12px', 'important');
+      lab.style.setProperty('color', '#8a7c6e', 'important');
+      lab.style.setProperty('font-size', '13px', 'important');
+    });
+
+    Array.prototype.forEach.call(modal.querySelectorAll('label > span'), function (sp) {
+      sp.style.setProperty('display', 'block', 'important');
+      sp.style.setProperty('margin-bottom', '6px', 'important');
+      sp.style.setProperty('color', '#8a7c6e', 'important');
+      sp.style.setProperty('opacity', '1', 'important');
+      sp.style.setProperty('visibility', 'visible', 'important');
+    });
+
+    /* 输入框 */
+    Array.prototype.forEach.call(modal.querySelectorAll('input, select, textarea'), function (inp) {
+      inp.style.setProperty('display', 'block', 'important');
+      inp.style.setProperty('width', '100%', 'important');
+      inp.style.setProperty('box-sizing', 'border-box', 'important');
+      inp.style.setProperty('font-family', 'inherit', 'important');
+      inp.style.setProperty('font-size', '14px', 'important');
+      inp.style.setProperty('color', '#5b5148', 'important');
+      inp.style.setProperty('background-color', '#fffdf9', 'important');
+      inp.style.setProperty('background-image', 'none', 'important');
+      inp.style.setProperty('border', '1px solid #ece0d2', 'important');
+      inp.style.setProperty('border-radius', '12px', 'important');
+      inp.style.setProperty('padding', '10px 12px', 'important');
+      inp.style.setProperty('outline', 'none', 'important');
+      inp.style.setProperty('margin', '0', 'important');
+      inp.style.setProperty('opacity', '1', 'important');
+      inp.style.setProperty('visibility', 'visible', 'important');
+    });
+
+    Array.prototype.forEach.call(modal.querySelectorAll('textarea'), function (ta) {
+      ta.style.setProperty('min-height', '72px', 'important');
+      ta.style.setProperty('resize', 'vertical', 'important');
+    });
+
+    /* 按钮 */
+    Array.prototype.forEach.call(modal.querySelectorAll('.mtb-btn'), function (btn) {
+      btn.style.setProperty('display', 'inline-block', 'important');
+      btn.style.setProperty('font-family', 'inherit', 'important');
+      btn.style.setProperty('font-size', '14px', 'important');
+      btn.style.setProperty('height', '42px', 'important');
+      btn.style.setProperty('padding', '0 18px', 'important');
+      btn.style.setProperty('border-radius', '12px', 'important');
+      btn.style.setProperty('cursor', 'pointer', 'important');
+      btn.style.setProperty('margin', '0', 'important');
+      btn.style.setProperty('box-sizing', 'border-box', 'important');
+      btn.style.setProperty('opacity', '1', 'important');
+      btn.style.setProperty('visibility', 'visible', 'important');
+      if (btn.classList.contains('mtb-btn-ghost')) {
+        btn.style.setProperty('background-color', '#f7f2ea', 'important');
+        btn.style.setProperty('border', '1px solid #ece1d3', 'important');
+        btn.style.setProperty('color', '#7a6d60', 'important');
+      } else if (btn.classList.contains('mtb-btn-danger')) {
+        btn.style.setProperty('background-color', '#f9dcdc', 'important');
+        btn.style.setProperty('border', '1px solid #eec6c6', 'important');
+        btn.style.setProperty('color', '#9e4f58', 'important');
+      } else {
+        btn.style.setProperty('background-color', '#f9d7dd', 'important');
+        btn.style.setProperty('border', '1px solid #f0c0ca', 'important');
+        btn.style.setProperty('color', '#8a4a5a', 'important');
+      }
+    });
+
+    /* 错误提示 */
+    Array.prototype.forEach.call(modal.querySelectorAll('.mtb-error'), function (err) {
+      err.style.setProperty('color', '#b3596a', 'important');
+      err.style.setProperty('font-size', '13px', 'important');
+      err.style.setProperty('min-height', '18px', 'important');
+      err.style.setProperty('margin', '0 0 10px', 'important');
+      err.style.setProperty('display', 'block', 'important');
+      err.style.setProperty('visibility', 'visible', 'important');
+    });
+
+    /* 确认文本 */
+    Array.prototype.forEach.call(modal.querySelectorAll('.mtb-confirm-text'), function (ct) {
+      ct.style.setProperty('color', '#7a6d60', 'important');
+      ct.style.setProperty('font-size', '14px', 'important');
+      ct.style.setProperty('margin', '0 0 18px', 'important');
+      ct.style.setProperty('line-height', '1.6', 'important');
+      ct.style.setProperty('display', 'block', 'important');
+      ct.style.setProperty('visibility', 'visible', 'important');
+    });
+  }
+
+  function showOverlay(el) {
+    forceOverlayStyle(el);
+    forceModalStyle(el.querySelector('.mtb-modal'));
+    el.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideOverlay(el) {
+    el.style.setProperty('display', 'none', 'important');
+    el.setAttribute('aria-hidden', 'true');
+  }
+
+  /* ---------- 弹窗 ---------- */
+  function openModal(task) {
+    editingId = task ? task.id : null;
+    modalTitle.textContent = task ? '编辑任务' : '新增任务';
+    fTitle.value = task ? task.title : '';
+    fDue.value = task ? task.dueDate : '';
+    fPriority.value = task ? task.priority : '中';
+    fCategory.value = task ? task.category : '';
+    fNote.value = task ? task.note : '';
+    fStatus.value = task ? task.status : 'todo';
+    formError.textContent = '';
+
+    showOverlay(overlay);
+
+    setTimeout(function () {
+      try { fTitle.focus(); } catch (e) {}
+    }, 60);
+  }
+
+  function closeModal() {
+    hideOverlay(overlay);
+    editingId = null;
+  }
+
+  function openConfirm(id) {
+    var task = getTaskById(id);
+    if (!task) return;
+    pendingDeleteId = id;
+    confirmText.textContent = '确定要删除任务“' + task.title + '”吗？删除后无法恢复。';
+    showOverlay(confirmOverlay);
+  }
+
+  function closeConfirm() {
+    hideOverlay(confirmOverlay);
+    pendingDeleteId = null;
+  }
+
+  /* ---------- 保存 ---------- */
+  function doSave() {
+    var title = fTitle.value.trim();
+    if (!title) {
+      formError.textContent = '请填写任务名称';
+      try { fTitle.focus(); } catch (e) {}
+      return;
+    }
+
+    var data = {
+      title: title,
+      dueDate: fDue.value || '',
+      priority: fPriority.value,
+      category: fCategory.value.trim(),
+      note: fNote.value.trim(),
+      status: fStatus.value
+    };
+
+    if (editingId) {
+      var t = getTaskById(editingId);
+      if (t) {
+        t.title = data.title;
+        t.dueDate = data.dueDate;
+        t.priority = data.priority;
+        t.category = data.category;
+        t.note = data.note;
+        t.status = data.status;
+      }
+    } else {
+      tasks.push({
+        id: uid(),
+        createdAt: nextCreatedAt(),
+        title: data.title,
+        dueDate: data.dueDate,
+        priority: data.priority,
+        category: data.category,
+        note: data.note,
+        status: data.status
+      });
+    }
+
+    saveTasks();
+    closeModal();
+    render();
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  addBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    openModal(null);
+  });
+
+  saveBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    doSave();
+  });
+
+  cancelBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal();
+  });
+
+  fTitle.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      e.preventDefault();
+      doSave();
+    }
+  });
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeModal();
+  });
+
+  searchInput.addEventListener('input', render);
+  categoryFilter.addEventListener('change', render);
+
+  statusFilter.addEventListener('change', function () {
+    if (isMobile() && statusFilter.value !== 'all') {
+      mobileStatus = statusFilter.value;
+    }
+    updateMobileTabs();
+    applyColumnVisibility();
+  });
+
+  mobileTabs.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-status]');
+    if (!btn) return;
+    mobileStatus = btn.getAttribute('data-status');
+    if (statusFilter.value !== 'all') statusFilter.value = 'all';
+    updateMobileTabs();
+    applyColumnVisibility();
+  });
+
+  if (mq) {
+    var onMqChange = function () {
+      updateMobileTabs();
+      applyColumnVisibility();
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onMqChange);
+    else if (mq.addListener) mq.addListener(onMqChange);
+  }
+
+  board.addEventListener('change', function (e) {
+    var el = e.target;
+    var card = el.closest('.card');
+    if (!card) return;
+    var task = getTaskById(card.getAttribute('data-id'));
+    if (!task) return;
+
+    if (el.matches('input[type="checkbox"]')) {
+      task.status = el.checked ? 'done' : 'todo';
+      saveTasks();
+      render();
+    } else if (el.matches('select[data-action="status"]')) {
+      task.status = el.value;
+      saveTasks();
+      render();
+    }
+  });
+
+  board.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    var card = btn.closest('.card');
+    if (!card) return;
+    var id = card.getAttribute('data-id');
+    var task = getTaskById(id);
+    if (!task) return;
+
+    if (btn.getAttribute('data-action') === 'edit') {
+      openModal(task);
+    } else if (btn.getAttribute('data-action') === 'delete') {
+      openConfirm(id);
+    }
+  });
+
+  confirmCancel.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeConfirm();
+  });
+
+  confirmOk.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!pendingDeleteId) { closeConfirm(); return; }
+    tasks = tasks.filter(function (t) { return t.id !== pendingDeleteId; });
+    saveTasks();
+    closeConfirm();
+    render();
+  });
+
+  confirmOverlay.addEventListener('click', function (e) {
+    if (e.target === confirmOverlay) closeConfirm();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      if (overlay.style.display === 'block') closeModal();
+      if (confirmOverlay.style.display === 'block') closeConfirm();
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
